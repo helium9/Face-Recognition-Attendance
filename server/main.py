@@ -8,6 +8,8 @@ from PIL import Image
 from mtcnn import MTCNN
 import insightface
 import math
+import pickle
+import json
 
 model = insightface.app.FaceAnalysis(name="buffalo_l")
 model.prepare(ctx_id=-1)
@@ -62,15 +64,43 @@ async def root():
 
 @app.post("/uploadfiles")
 async def create_upload_files(files: List[UploadFile]):
-    photo = await files[0].read()
-    nparr = np.fromstring(photo, np.uint8)
-    img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-    
-    faces = model.get(img)
-    # print(faces)
-    img = draw_bounding_boxes(img, faces)
-    img = Image.fromarray(img)
-    print("hi")
-    img.save("./image.png")
-    return {"filenames": [file.filename for file in files]}
+    with open("./attendance_embeddings.pkl", 'rb') as file:
+        base_embeddings = pickle.load(file)
+
+    output = set()
+    for file in files:
+        photo = await file.read()
+        nparr = np.fromstring(photo, np.uint8)
+        img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+        
+        faces = model.get(img)
+        # print(faces)
+        # img = draw_bounding_boxes(img, faces)
+        # img = Image.fromarray(img)
+        # print("hi")
+        # img.save("./image.png")
+
+        final = []
+        for face in faces:
+            max_score=0.35
+            max_roll=0
+            for roll in base_embeddings:
+                for e1 in base_embeddings[roll]:
+                    score = compareEmbedding(e1,face['embedding'])
+                    if max_score<score:
+                        max_score = score
+                        max_roll = roll
+
+            if(max_roll!=0):
+                final.append(max_roll)
+        
+        
+        final = set(final)
+        # print(file.filename, ":")
+        # print(final)
+        output = output.union(final)
+    output = list(output)
+    output.sort()
+    # print(output)
+    return {"present": output}
     

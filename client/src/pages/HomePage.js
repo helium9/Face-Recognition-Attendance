@@ -40,6 +40,7 @@ function AllPresent({ data, name }) {
 export default function HomePage() {
   const fileUploader = useRef();
   const [selectedFile, setSelectedFile] = useState([]);
+  const [allPresent, setAllPresent] = useState([]);
 
   console.log(selectedFile[0])
   function fileSubmit() {
@@ -47,6 +48,7 @@ export default function HomePage() {
 
     selectedFile.forEach((file) => formData.append("files", file));
     // console.log(formData);
+    setAllPresent([]);
     axios
       .post("http://127.0.0.1:8000/uploadfiles", formData, {
         headers: {
@@ -54,7 +56,8 @@ export default function HomePage() {
         },
       })
       .then((response) => {
-        console.log("Response:", response.data);
+        console.log(response.data.present)
+        setAllPresent(response.data.present);
       })
       .catch((error) => {
         console.error("Error:", error);
@@ -102,7 +105,7 @@ export default function HomePage() {
 
           <div className="flex flex-col gap-2">
             <p className=" font-medium">All present:</p>
-            <AllPresent data={all_present} name="present" />
+            <AllPresent data={allPresent} name="present" />
             <span className="w-full flex flex-row justify-end mt-4 gap-4">
               <Button
                 className="bg-zinc-700 text-zinc-100 font-medium w-24"
