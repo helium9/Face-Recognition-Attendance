@@ -1,123 +1,27 @@
-import { Card, CardBody } from "@nextui-org/react";
-import { Button, ButtonGroup } from "@nextui-org/react";
-import { ChangeEvent, useRef, useState } from "react";
-import axios from "axios";
-
-const all_present = ["220001004", "220001002", "220001003", "220001004"];
-const all_files = ["file_name1.png", "file_name2.png"];
-function StagingArea({ data, name }) {
-  return (
-    <Card className="rounded-md bg-zinc-800">
-      <CardBody className="flex flex-col gap-2 sm:gap-3">
-        {data.length === 0 ? (
-          <p className="text-sm text-zinc-400">*Add files to display</p>
-        ) : (
-          data.map((item, index) => (
-            <div key={index} className="flex flex-row gap-2 items-center">
-              <p className="w-48 text-sm">{item.name}</p>
-            </div>
-          ))
-        )}
-      </CardBody>
-    </Card>
-  );
-}
-
-function AllPresent({ data, name }) {
-  return (
-    <Card className="rounded-md bg-zinc-800">
-      <CardBody className="flex flex-col gap-2 sm:gap-3">
-        {data.map((item, index) => (
-          <div key={index} className="flex flex-row gap-2 items-center">
-            <p className="w-48 text-sm">{item}</p>
-          </div>
-        ))}
-      </CardBody>
-    </Card>
-  );
-}
-
-export default function HomePage() {
-  const fileUploader = useRef();
-  const [selectedFile, setSelectedFile] = useState([]);
-  const [allPresent, setAllPresent] = useState([]);
-
-  console.log(selectedFile[0])
-  function fileSubmit() {
-    const formData = new FormData();
-
-    selectedFile.forEach((file) => formData.append("files", file));
-    // console.log(formData);
-    setAllPresent([]);
-    axios
-      .post("http://127.0.0.1:8000/uploadfiles", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      })
-      .then((response) => {
-        console.log(response.data.present)
-        setAllPresent(response.data.present);
-      })
-      .catch((error) => {
-        console.error("Error:", error);
-      });
-  }
-  console.log(selectedFile);
+import {Button, ButtonGroup} from "@nextui-org/react";
+import { Link } from "react-router-dom";
+function HomePage() {
   return (
     <>
-      <div className="flex w-full justify-center p-4">
-        <div className="w-96 flex flex-col gap-4">
-          <p className="text-2xl font-bold">Take Attendance</p>
-          <div className="flex flex-col gap-2">
-            <p className=" font-medium">Uploaded Images:</p>
-            <StagingArea data={selectedFile} name="file" />
-            <span className="w-full flex flex-row justify-end mt-4 gap-4">
-              <Button
-                onPress={() => fileUploader.current.click()}
-                className="bg-zinc-700 text-zinc-100 font-medium w-24"
-                radius="sm"
-                size="md"
-              >
-                Add files
-              </Button>
-              <Button
-                onPress={fileSubmit}
-                className="bg-zinc-700 text-zinc-100 font-medium w-24"
-                radius="sm"
-                size="md"
-              >
-                Submit
-              </Button>
-            </span>
-
-            <input
-              accept=".png, .jpg, .jpeg"
-              //   this doesn't really prevent the user from uploading anyways
-              hidden
-              type="file"
-              ref={fileUploader}
-              onChange={(e) =>
-                setSelectedFile([...selectedFile, e.target.files[0]])
-              }
-            />
+      <div style={{"background-color": "#000000", "background-image": `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Cg fill-rule='evenodd'%3E%3Cg fill='%239C92AC' fill-opacity='0.4'%3E%3Cpath opacity='.5' d='M96 95h4v1h-4v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9zm-1 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-9-10h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm9-10v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-9-10h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm9-10v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-9-10h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm9-10v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-9-10h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9z'/%3E%3Cpath d='M6 5V0H5v5H0v1h5v94h1V6h94V5H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`}} className="flex w-full h-screen justify-center p-4 font-['Poppins']">
+        <div className="w-96 flex h-full flex-col  justify-center">
+          <div className="lg:text-9xl flex flex-row items-center content-center text-8xl h-32 lg:h-48">
+            <p className="font-['Roboto'] bg-gradient-to-r from-primary to-danger bg-clip-text text-transparent font-bold">
+              404
+            </p>
+            <p className="lg:text-8xl text-6xl mx-1">😓</p>
           </div>
-
-          <div className="flex flex-col gap-2">
-            <p className=" font-medium">All present:</p>
-            <AllPresent data={allPresent} name="present" />
-            <span className="w-full flex flex-row justify-end mt-4 gap-4">
-              <Button
-                className="bg-zinc-700 text-zinc-100 font-medium w-24"
-                radius="sm"
-                size="md"
-              >
-                Export CSV
-              </Button>
-            </span>
+          <div>
+          <p className="text-lg font-medium">Sorry this page doesn't exist 'yet'.</p>
+          <p className="italic text-sm text-zinc-200">But we'll surely make it after mid-eval!</p>
           </div>
+          <Button className="w-24 bg-gradient-to-r from-primary to-danger font-bold my-4" radius="sm"><Link to="./upload" relative="path">
+          Demo 🔗
+    </Link></Button>
         </div>
       </div>
     </>
   );
 }
+
+export default HomePage;
