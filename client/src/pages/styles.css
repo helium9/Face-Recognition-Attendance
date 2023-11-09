@@ -1,0 +1,23 @@
+@import url('https://fonts.googleapis.com/css2?family=Raleway:wght@200&display=swap');
+.fname{
+  justify-content: center;
+  align-items: center;
+}
+#main{
+  display: grid;
+  margin-top: 7rem;
+  justify-content: center;
+  align-items: center;
+}
+#name{
+  width: 20rem;
+  padding: 1rem;
+}
+#rno{
+  width: 20rem;
+  padding: 1rem;
+}
+#btn{
+  margin-left: 5rem;
+  width: 11rem;
+}
