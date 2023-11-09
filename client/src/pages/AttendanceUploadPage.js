@@ -1,6 +1,6 @@
 import { Card, CardBody } from "@nextui-org/react";
-import { Button, ButtonGroup } from "@nextui-org/react";
-import { ChangeEvent, useRef, useState } from "react";
+import { Button} from "@nextui-org/react";
+import {useRef, useState } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
 
@@ -43,13 +43,13 @@ export default function HomePage() {
   const fileUploader = useRef();
   const [selectedFile, setSelectedFile] = useState([]);
   const [allPresent, setAllPresent] = useState([]);
-
-  console.log(selectedFile[0])
+  // console.log(selectedFile);
+  // console.log(selectedFile[0])
   function fileSubmit() {
     const formData = new FormData();
 
     selectedFile.forEach((file) => formData.append("files", file));
-    // console.log(formData);
+    console.log(formData);
     setAllPresent([]);
     axios
       .post("http://127.0.0.1:8000/uploadfiles", formData, {
