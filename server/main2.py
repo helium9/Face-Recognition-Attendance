@@ -6,12 +6,19 @@ import numpy as np
 import cv2
 import insightface
 import math
+import random
+import time
 import pickle
 import csv
 from fastapi import FastAPI, Request, Form, File, UploadFile
+from pymongo import MongoClient
+from pydantic import BaseModel
 
 model = insightface.app.FaceAnalysis(name="buffalo_l")
 model.prepare(ctx_id=-1)
+
+class Item(BaseModel):
+    data: list
 
 students = {
     190001060: 'SURENDAR KETHAVATH',
@@ -145,6 +152,19 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+try:
+    client = MongoClient("mongodb://localhost:27017/")
+    database = client["Attendance_Face"]
+    print("Connected to MongoDB successfully")
+except Exception as e:
+    print(f"Failed to connect to MongoDB: {e}")
+
+# if client.alive:
+#     print("Connected to MongoDB successfully")
+# else:
+#     print("Failed to connect to MongoDB")
+
+
 @app.get("/")
 async def root():
     return {"message": "Hello World"}
@@ -209,3 +229,69 @@ async def create_upload_files(files: List[UploadFile]):
     return {"present": output}
     # return FileResponse('./final-attendance.csv', filename='final-attendance.csv')
     
+@app.get("/Class")
+async def getClass(user: str):
+    try:
+        collection = database[user]
+        cursor = collection.find({"type":"class"})
+        
+        output = []
+        for document in cursor:
+            output.append({"id":str(document["_id"]), "batch": document["batch"], "code": document["code"], "color":document["color"]})
+        return output
+    except Exception as e:
+        print(e)
+
+@app.post("/Class")
+async def postClass(data: Item, user:str):
+    data = list(data)[0][1]
+    colors = ['red', 'orange', 'amber', 'yellow', 'lime', 'green', 'emerald', 'teal', 'cyan', 'sky', 'blue', 'indigo', 'violet', 'purple', 'fushsia', 'pink', 'rose']
+    random.seed(time.time())
+    color = random.choice(colors)
+    # print(color)
+    collection = database[user]
+    cursor = collection.insert_one({"type":"class", "code": data[0], "batch": data[1], "color": color})
+    print(cursor)
+    print({"result": str(cursor)})
+
+@app.get("/Config")
+async def getStudents(user:str, classId:str):
+    print(classId)
+    print(user)
+    collection = database[user]
+    count = collection.count_documents({"type":"students", "classId":classId})
+    if count>0:
+        cursor = collection.find({"type":"students", "classId":classId}, {'students':1, '_id':0})
+        output = []
+        for row in cursor[0]['students']:
+            output.append([str(row[1]), row[2]])
+        return output
+    else:
+        return []
+    
+@app.post("/Config")
+async def postStudents(user:str, classId:str, files: dict): #for embeddings
+    print(user)
+    print(classId)
+    print(files)
+    return "hi"
+
+
+@app.post("/ConfigAddStudent")
+async def addStudent(data:Item, user:str, classId:str):
+    data = list(data)[0][1]
+    print(classId)
+    print(user)
+    print(data)
+    collection = database[user]
+    count = collection.count_documents({"type":"students", "classId":classId})
+    if count>0:
+        cursor = collection.find({"type":"students", "classId":classId}, {'students':1, '_id':0})
+        newStudents = cursor[0]['students']
+        newStudents.append([len(newStudents), data[1], data[0]])
+        result = collection.update_one({"type":"students", "classId":classId}, {"$set": {'students':newStudents}})
+    else:
+        newStudents = []
+        newStudents.append([len(newStudents), data[1], data[0]])
+        result = collection.update_one({"type":"students", "classId":classId}, {"$set": {'students':newStudents}})
+    return newStudents

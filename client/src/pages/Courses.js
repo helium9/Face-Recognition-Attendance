@@ -13,7 +13,8 @@ import {
   ModalFooter,
   useDisclosure,
 } from "@nextui-org/react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import axios from "axios";
 
 function CourseCard({ code, color, batch, id }) {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
@@ -141,20 +142,44 @@ function CourseCard({ code, color, batch, id }) {
   );
 }
 export default function Courses() {
+  const [courses, setCourses] = useState([]);
+  function getClasses() {
+    axios
+      .get("http://localhost:8000/Class", { params: { user: "user1" } })
+      .then((res) => {
+        // console.log("inside function", res.data);
+        setCourses(res.data);
+      });
+  }
+
+  useEffect(()=>{
+    getClasses();
+  }, []);
+
+  // console.log("Courses:", courses);
   const [addCourseData, setAddCourseData] = useState(["", ""]);
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
+  function handleAddCourse(){
+    console.log(addCourseData);
+    axios
+      .post("http://localhost:8000/Class", {data: addCourseData}, { params: { user: "user1" } });
+  }
   return (
     <div className="w-screen h-screen flex justify-center">
       <div className="flex flex-col gap-3 p-4 w-96">
         <div className="font-medium">Classes:</div>
-        <CourseCard id="CS201" code="CS201" batch="B.Tech 2022" color="blue" />
-        <CourseCard id="CS203" code="CS203" batch="B.Tech 2022" color="rose" />
-        <CourseCard
-          id="CS207"
-          code="CS207"
-          batch="B.Tech 2022"
-          color="emerald"
-        />
+        {courses.map((item) => {
+          {/* console.log(item); */}
+          return (
+            <CourseCard
+              key={item.id}
+              id={item.id}
+              code={item.code}
+              batch={item.batch}
+              color={item.color}
+            />
+          );
+        })}
         <Button
           onPress={() => {
             onOpen();
@@ -172,7 +197,7 @@ export default function Courses() {
                 <ModalHeader className="flex flex-col gap-1">
                   Class Details
                 </ModalHeader>
-                {/* <form onSubmit={(event) => handleModalSubmit(typeModal, event)}> */}
+                <form onSubmit={handleAddCourse}>
                 <ModalBody>
                   <Input
                     label="Course Name"
@@ -207,7 +232,7 @@ export default function Courses() {
                     Submit
                   </Button>
                 </ModalFooter>
-                {/* </form> */}
+                </form>
               </>
             )}
           </ModalContent>
