@@ -2,6 +2,7 @@ import { Card, CardBody } from "@nextui-org/react";
 import { Button} from "@nextui-org/react";
 import {useRef, useState } from "react";
 import axios from "axios";
+import { Link } from "react-router-dom";
 
 // const all_present = ["220001004", "220001002", "220001003", "220001004"];
 // const all_files = ["file_name1.png", "file_name2.png"];
@@ -118,6 +119,7 @@ export default function HomePage() {
             </span>
           </div>
         </div>
+       
       </div>
     </>
   );

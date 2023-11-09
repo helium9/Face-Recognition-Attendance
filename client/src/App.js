@@ -4,7 +4,8 @@ import HomePage from "./pages/HomePage";
 import Courses from "./pages/Courses";
 import Config from "./pages/Config";
 import Config3 from "./pages/Config3";
-
+// import Add_student from "./pages/Add_student";
+import Student_details from "./pages/Student_details.js";
 function App() {
   return (
     <>
@@ -14,6 +15,7 @@ function App() {
         <Route path="/takeattendance" element={<AttendanceUploadPage />}></Route>
         <Route path="/config" element={<Config />}></Route>
         <Route path="/config2" element={<Config3 />}></Route>
+        <Route path="/Student_Details" element={<Student_details/>}></Route>
       </Routes>
     </>
   );
