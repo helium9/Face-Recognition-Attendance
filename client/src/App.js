@@ -1,7 +1,8 @@
 import { Routes, Route } from "react-router-dom";
-import UploadPage from "./pages/UploadPage";
+import AttendanceUploadPage from "./pages/AttendanceUploadPage";
 import HomePage from "./pages/HomePage";
 import Courses from "./pages/Courses";
+import Config from "./pages/Config";
 
 function App() {
   return (
@@ -9,7 +10,8 @@ function App() {
       <Routes>
         <Route path="/" element={<HomePage />}></Route>
         <Route path="/courses" element={<Courses />}></Route>
-        <Route path="/takeattendance" element={<UploadPage />}></Route>
+        <Route path="/takeattendance" element={<AttendanceUploadPage />}></Route>
+        <Route path="/config" element={<Config />}></Route>
       </Routes>
     </>
   );

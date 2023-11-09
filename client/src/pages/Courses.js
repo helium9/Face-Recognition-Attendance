@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import { Button, ButtonGroup } from "@nextui-org/react";
 import {
   Card,
@@ -14,9 +15,10 @@ import {
 } from "@nextui-org/react";
 import { useState } from "react";
 
-function CourseCard({ code, color, batch }) {
+function CourseCard({ code, color, batch, id }) {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const currentDate = new Date();
+  const navigate = useNavigate();
   const [date, setDate] = useState([
     currentDate.getDate(),
     currentDate.getMonth() + 1,
@@ -112,8 +114,8 @@ function CourseCard({ code, color, batch }) {
         <Button
           className="rounded-none bg-zinc-900"
           onPress={() => {
-            onOpen();
             setTypeModal("take");
+            onOpen();
           }}
         >
           Take
@@ -121,25 +123,96 @@ function CourseCard({ code, color, batch }) {
         <Button
           className="rounded-none bg-zinc-900"
           onPress={() => {
-            onOpen();
             setTypeModal("view");
+            onOpen();
           }}
         >
           View
         </Button>
-        <Button className="rounded-none bg-zinc-900">Config</Button>
+        <Button
+          className="rounded-none bg-zinc-900"
+          onPress={() => navigate("/config", { state: { id: id } })}
+        >
+          Config
+        </Button>
         {ModalComponent}
       </ButtonGroup>
     </Card>
   );
 }
 export default function Courses() {
+  const [addCourseData, setAddCourseData] = useState(["", ""]);
+  const { isOpen, onOpen, onOpenChange } = useDisclosure();
   return (
-    <div className="flex flex-col gap-3 p-4">
-      <div className="font-medium">Courses:</div>
-      <CourseCard code="CS201" batch="B.Tech 2022" color="blue" />
-      <CourseCard code="CS203" batch="B.Tech 2022" color="rose" />
-      <CourseCard code="CS207" batch="B.Tech 2022" color="emerald" />
+    <div className="w-screen h-screen flex justify-center">
+      <div className="flex flex-col gap-3 p-4 w-96">
+        <div className="font-medium">Classes:</div>
+        <CourseCard id="CS201" code="CS201" batch="B.Tech 2022" color="blue" />
+        <CourseCard id="CS203" code="CS203" batch="B.Tech 2022" color="rose" />
+        <CourseCard
+          id="CS207"
+          code="CS207"
+          batch="B.Tech 2022"
+          color="emerald"
+        />
+        <Button
+          onPress={() => {
+            onOpen();
+          }}
+          className="bg-zinc-700 text-zinc-100 font-medium w-24"
+          radius="sm"
+          size="md"
+        >
+          Add class
+        </Button>
+        <Modal isOpen={isOpen} onOpenChange={onOpenChange} placement="center">
+          <ModalContent>
+            {(onClose) => (
+              <>
+                <ModalHeader className="flex flex-col gap-1">
+                  Class Details
+                </ModalHeader>
+                {/* <form onSubmit={(event) => handleModalSubmit(typeModal, event)}> */}
+                <ModalBody>
+                  <Input
+                    label="Course Name"
+                    variant="bordered"
+                    value={addCourseData[0]}
+                    onValueChange={(val) =>
+                      setAddCourseData(
+                        addCourseData.map((item, index) =>
+                          index === 0 ? val : item
+                        )
+                      )
+                    }
+                  />
+                  <Input
+                    label="Batch Name"
+                    variant="bordered"
+                    value={addCourseData[1]}
+                    onValueChange={(val) =>
+                      setAddCourseData(
+                        addCourseData.map((item, index) =>
+                          index === 1 ? val : item
+                        )
+                      )
+                    }
+                  />
+                </ModalBody>
+                <ModalFooter>
+                  <Button color="danger" variant="light" onPress={onClose}>
+                    Close
+                  </Button>
+                  <Button color="primary" onPress={onClose} type="submit">
+                    Submit
+                  </Button>
+                </ModalFooter>
+                {/* </form> */}
+              </>
+            )}
+          </ModalContent>
+        </Modal>
+      </div>
     </div>
   );
 }

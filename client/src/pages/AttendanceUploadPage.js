@@ -1,6 +1,6 @@
 import { Card, CardBody } from "@nextui-org/react";
-import { Button, ButtonGroup } from "@nextui-org/react";
-import { ChangeEvent, useRef, useState } from "react";
+import { Button} from "@nextui-org/react";
+import {useRef, useState } from "react";
 import axios from "axios";
 
 // const all_present = ["220001004", "220001002", "220001003", "220001004"];
@@ -48,7 +48,7 @@ export default function HomePage() {
     const formData = new FormData();
 
     selectedFile.forEach((file) => formData.append("files", file));
-    // console.log(formData);
+    console.log(formData);
     setAllPresent([]);
     axios
       .post("http://127.0.0.1:8000/uploadfiles", formData, {
