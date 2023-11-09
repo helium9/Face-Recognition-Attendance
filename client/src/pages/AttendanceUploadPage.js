@@ -42,8 +42,8 @@ export default function HomePage() {
   const fileUploader = useRef();
   const [selectedFile, setSelectedFile] = useState([]);
   const [allPresent, setAllPresent] = useState([]);
-
-  console.log(selectedFile[0])
+  // console.log(selectedFile);
+  // console.log(selectedFile[0])
   function fileSubmit() {
     const formData = new FormData();
 
