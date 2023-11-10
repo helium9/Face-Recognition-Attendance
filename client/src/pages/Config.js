@@ -37,10 +37,7 @@ const FileUploader = ({ setPayload, roll }) => {
   const fileUploader = useRef();
 
   const handleFileChange = (e) => {
-    setPayload((prev) => ({
-      ...prev,
-      [roll]: { file: e.target.files[0], name: e.target.files[0].name },
-    }));
+    setPayload((prev) => [...prev, [e.target.files[0], roll]]);
   };
 
   return (
@@ -68,7 +65,7 @@ const FileUploader = ({ setPayload, roll }) => {
 export default function Config() {
   const [addStudent, setAddStudent] = useState(["", ""]);
   const [studentData, setStudentData] = useState([]);
-  const [selectedFiles, setSelectedFiles] = useState({});
+  const [selectedFiles, setSelectedFiles] = useState([]);
   const location = useLocation();
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   console.log(location.state);
@@ -97,14 +94,8 @@ export default function Config() {
   const fileSubmit = () => {
     const formData = new FormData();
     console.log("sel", selectedFiles);
-    Object.entries(selectedFiles).forEach(([key, value]) =>
-      formData.append("files", { Roll: key, File: value })
-    );
-    axios.post("http://localhost:8000/Config", {files:formData},{
-      params: { classId: location.state.id, user: "user1" },
-    });
-
-    formData.forEach((value, key) => console.log(`${key}: ${value}`));
+    selectedFiles.map((item)=>formData.append(item[1], item[0]));
+    console.log(formData);
   };
 
   return (

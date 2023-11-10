@@ -268,9 +268,13 @@ async def getStudents(user:str, classId:str):
         return output
     else:
         return []
-    
+
+class FileItem(BaseModel):
+    roll: str
+    file: UploadFile
+
 @app.post("/Config")
-async def postStudents(user:str, classId:str, files: dict): #for embeddings
+async def postStudents(user:str, classId:str, files: FileItem): #for embeddings
     print(user)
     print(classId)
     print(files)
