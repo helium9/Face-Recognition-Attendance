@@ -37,7 +37,9 @@ const FileUploader = ({ setPayload, roll }) => {
   const fileUploader = useRef();
 
   const handleFileChange = (e) => {
-    setPayload((prev) => [...prev, [e.target.files[0], roll]]);
+    const file = e.target.files[0];
+    const newFile = new File([file], String(roll), {type: file.type})
+    setPayload((prev) => ({...prev, [roll]: newFile}));
   };
 
   return (
@@ -65,14 +67,14 @@ const FileUploader = ({ setPayload, roll }) => {
 export default function Config() {
   const [addStudent, setAddStudent] = useState(["", ""]);
   const [studentData, setStudentData] = useState([]);
-  const [selectedFiles, setSelectedFiles] = useState([]);
+  const [selectedFiles, setSelectedFiles] = useState({});
   const location = useLocation();
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
-  console.log(location.state);
+  // console.log(location.state);
 
   function handleAddStudent(e) {
     e.preventDefault();
-    console.log(addStudent);
+    // console.log(addStudent);
     axios
       .post(
         "http://localhost:8000/ConfigAddStudent",
@@ -93,9 +95,26 @@ export default function Config() {
 
   const fileSubmit = () => {
     const formData = new FormData();
-    console.log("sel", selectedFiles);
-    selectedFiles.map((item)=>formData.append(item[1], item[0]));
-    console.log(formData);
+    // console.log("sel", selectedFiles);
+    const payload = Object.values(selectedFiles).map((item)=>item);
+    // console.log(payload)
+    payload.forEach((file) => formData.append("files", file));
+    // console.log(formData);
+    axios
+      .post("http://127.0.0.1:8000/Config", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+        params: { user: "user1", classId: location.state.id }
+      })
+      .then((response) => {
+        console.log(response.data);
+      })
+      .catch((error) => {
+        console.error("Error:", error);
+      });
+    // selectedFiles.map((item) => formData.append(item[1], item[0]));
+    // console.log(formData);
   };
 
   return (
@@ -108,26 +127,29 @@ export default function Config() {
             <TableColumn>Upload</TableColumn>
           </TableHeader>
           <TableBody>
-            {studentData.map((item) => (
-              <TableRow key={item[0]}>
-                <TableCell>{item[0]}</TableCell>
-                {/* Roll */}
-                <TableCell>{item[1]}</TableCell>
-                <TableCell>
-                  {selectedFiles[item[0]] && (
-                    <StagingArea data={[{ name: item[0] }]} />
-                  )}
-                  <span className="w-full flex flex-row justify-end mt-4">
-                    {!selectedFiles[item[0]] && (
-                      <FileUploader
-                        setPayload={setSelectedFiles}
-                        roll={item[0]}
-                      />
+            {studentData.map((item, index) => {
+              {/* console.log("inside", selectedFiles, "item", item[0], selectedFiles[String(item[0])]); */}
+              return (
+                <TableRow key={item[0]}>
+                  <TableCell>{item[0]}</TableCell>
+                  {/* Roll */}
+                  <TableCell>{item[1]}</TableCell>
+                  <TableCell>
+                    {selectedFiles[String(item[0])] && (
+                      <StagingArea data={[{ name: item[0] }]} />
                     )}
-                  </span>
-                </TableCell>
-              </TableRow>
-            ))}
+                    {!selectedFiles[item[0]] && (
+                      <span className="w-full flex flex-row justify-end mt-4">
+                        <FileUploader
+                          setPayload={setSelectedFiles}
+                          roll={item[0]}
+                        />
+                      </span>
+                    )}
+                  </TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
         <Button

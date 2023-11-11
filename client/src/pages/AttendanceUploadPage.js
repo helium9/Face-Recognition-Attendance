@@ -2,7 +2,8 @@ import { Card, CardBody } from "@nextui-org/react";
 import { Button} from "@nextui-org/react";
 import {useRef, useState } from "react";
 import axios from "axios";
-import { Link } from "react-router-dom";
+import { Link, useLocation} from "react-router-dom";
+
 
 // const all_present = ["220001004", "220001002", "220001003", "220001004"];
 // const all_files = ["file_name1.png", "file_name2.png"];
@@ -41,31 +42,33 @@ function AllPresent({ data, name }) {
 
 export default function HomePage() {
   const fileUploader = useRef();
+  const location = useLocation();
+  console.log(location.state);
   const [selectedFile, setSelectedFile] = useState([]);
   const [allPresent, setAllPresent] = useState([]);
   // console.log(selectedFile);
   // console.log(selectedFile[0])
   function fileSubmit() {
     const formData = new FormData();
-
     selectedFile.forEach((file) => formData.append("files", file));
-    console.log(formData);
+    // console.log(formData);
     setAllPresent([]);
     axios
       .post("http://127.0.0.1:8000/uploadfiles", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
+        params: { user: "user1", classId: location.state.id, date: location.state.date }
       })
       .then((response) => {
         console.log(response.data.present)
-        setAllPresent(response.data.present);
+        setAllPresent(response.data.present); 
       })
       .catch((error) => {
         console.error("Error:", error);
       });
   }
-  console.log(selectedFile);
+  // console.log(selectedFile);
   return (
     <>
       <div className="flex w-full justify-center p-4">

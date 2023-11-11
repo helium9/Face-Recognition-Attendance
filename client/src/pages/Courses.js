@@ -28,7 +28,10 @@ function CourseCard({ code, color, batch, id }) {
   const [typeModal, setTypeModal] = useState("take");
   const handleModalSubmit = async (type, event) => {
     event.preventDefault();
-    console.log(type, date);
+    // console.log(type, date);
+    if(type==="take"){
+      navigate("/takeattendance", { state: { id: id, date:`${String(date[0])}/${String(date[1])}/${String(date[2])}` } })
+    }
   };
   const ModalComponent = (
     <Modal isOpen={isOpen} onOpenChange={onOpenChange} placement="center">
@@ -165,7 +168,7 @@ export default function Courses() {
       .post("http://localhost:8000/Class", {data: addCourseData}, { params: { user: "user1" } });
   }
   return (
-    <div className="w-screen h-screen flex justify-center">
+    <div className="w-screen flex justify-center">
       <div className="flex flex-col gap-3 p-4 w-96">
         <div className="font-medium">Classes:</div>
         {courses.map((item) => {

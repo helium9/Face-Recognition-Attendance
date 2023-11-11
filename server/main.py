@@ -4,15 +4,109 @@ from typing import List
 import logging
 import numpy as np
 import cv2
-from PIL import Image
-from mtcnn import MTCNN
 import insightface
 import math
+import random
+import time
 import pickle
-import json
+import csv
+from fastapi import FastAPI, Request, Form, File, UploadFile
+from pymongo import MongoClient
+from pydantic import BaseModel
 
 model = insightface.app.FaceAnalysis(name="buffalo_l")
 model.prepare(ctx_id=-1)
+
+class Item(BaseModel):
+    data: list
+
+students = {
+    190001060: 'SURENDAR KETHAVATH',
+    220001001: 'AADISH JAIN',
+    220001002: 'ABHINAV GANGIL',
+    220001003: 'ADITI ASHISH WEKHANDE',
+    220001004: 'ADITYA KSHITIZ',
+    220001005: 'ADITYA SACHIN MASTUD',
+    220001006: 'ADITYA YADAV',
+    220001007: 'AMAN PRATAP SINGH',
+    220001008: 'AMIT TIWARI',
+    220001009: 'ANIRUDH GAUTAM',
+    220001010: 'ANNAMSHETTI SUMANTH',
+    220001011: 'ARAVAPALLI PAVAN KUMAR',
+    220001012: 'ATHARVA ANIL SANGAWAR',
+    220001013: 'ATHARVA NANOTI',
+    220001014: 'AVIRAL SHARMA',
+    220001015: 'AYITHA TRIBUVAN',
+    220001016: 'BALABHADRA RITHVIK',
+    220001017: 'BHARAT KAURAV',
+    220001018: 'BHAVANAM SAI PAVAN KUMAR REDDY',
+    220001019: 'BHUKYA HAVISH',
+    220001020: 'CHANDEKAR RIDDHI UMESH',
+    220001021: 'CHERUPALLY VINAY',
+    220001022: 'CHIRANJIVI KESHAV',
+    220001023: 'DARBHA KALYANA SRIRAM',
+    220001024: 'DARSHIL PATEL',
+    220001025: 'DEBASISH PADHY',
+    220001026: 'DEEPAK YADAV',
+    220001027: 'DEVANSHI CHHATBAR',
+    220001028: 'EDULA BHOOMIKA',
+    220001029: 'GARIMA UPADHYAY',
+    220001031: 'GUNTUKU RISHWANTH SAI',
+    220001032: 'HITESH MAURYA',
+    220001033: 'JAY SOLANKI',
+    220001034: 'JONNALAGADDA SAI PRANAY DEEP',
+    220001035: 'KALWAGHE PRANAV SANTOSH',
+    220001036: 'KAMBAM SAI RUCHITHA',
+    220001037: 'KANAK NAGAR',
+    220001038: 'KAPUGANTY VENKATA SATYA TEJA',
+    220001039: 'KARAN JALINDAR JADHAV',
+    220001040: 'KODUDULA NIKETH REDDY',
+    220001041: 'KONETI TEJASWINI',
+    220001042: 'LALIT',
+    220001043: 'MADAN P',
+    220001044: 'MALLAVARAPU SAI VARSHITH',
+    220001045: 'MISHA JAIN',
+    220001046: 'MUDE ANKITHA',
+    220001047: 'MUDE HEMA DEEPIKA',
+    220001048: 'MUSKAN',
+    220001049: 'NAREN KUMAR SAI KAJA',
+    220001050: 'NEERUPAM',
+    220001051: 'NIKITA SANJAY TAYADE',
+    220001052: 'P C UMA MAHESH',
+    220001053: 'PANCHANGAM AKHILESH',
+    220001054: 'PANTHAM RAJA KRISHNA',
+    220001055: 'PAPPALA TEJASWINI',
+    220001056: 'PARAM BANSAL',
+    220001057: 'PARTH SHARADRAO DESHMUKH',
+    220001058: 'PRADEEP KUMAR REBBAVARAPU',
+    220001059: 'PRANJAY CHOUHAN',
+    220001060: 'PRATHAM GUPTA',
+    220001061: 'PRINCE KUMAR GUPTA',
+    220001062: 'PRIYANSH VERMA',
+    220001063: 'RISHI BHARAT JUNGHARE',
+    220001064: 'S RUTHVIK',
+    220001065: 'SAI SANJANA REDDY ALGUBELLY',
+    220001066: 'SAKET MESHRAM',
+    220001067: 'SAKET PRASHANT THAMKE',
+    220001068: 'SAMYAK DHYANI',
+    220001069: 'SANJEET KUMAR',
+    220001070: 'SARTHAK BRAR',
+    220001071: 'SATYA NARAYAN',
+    220001073: 'SHAIK SUHANA',
+    220001074: 'SHAURYA KSHITIJ KHETARPAL',
+    220001075: 'SHIVRAJ RATHORE',
+    220001076: 'SIDDHESH NITIN WAJE',
+    220001077: 'VASHISTHA NARAYAN CHATURVEDI',
+    220001078: 'VEDANT DINKAR',
+    220001079: 'VIJIT BALSORI',
+    220001080: 'VINEET VERMA',
+    220001081: 'VOTTE SRIYANS REDDY',
+    220001082: 'YANNAM YESWANTH REDDY',
+    220002018: 'ARNAV NIRMAL JAIN',
+    220002029: 'BORRA GNANA VENKATA SHIVA',
+    220002063: 'PRASAD AKANKSHA',
+    220002081: 'VEDANT UPADHYAY'
+}
 
 from sklearn.metrics.pairwise import cosine_similarity
 def compare(address1,address2):
@@ -58,14 +152,25 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+try:
+    client = MongoClient("mongodb://localhost:27017/")
+    database = client["Attendance_Face"]
+    print("Connected to MongoDB successfully")
+except Exception as e:
+    print(f"Failed to connect to MongoDB: {e}")
+
+
 @app.get("/")
 async def root():
     return {"message": "Hello World"}
 
 @app.post("/uploadfiles")
-async def create_upload_files(files: List[UploadFile]):
+async def create_upload_files(files: List[UploadFile], user:str, classId:str):
+    # print(user)
+    # print(classId)
     with open("./attendance_embeddings.pkl", 'rb') as file:
         base_embeddings = pickle.load(file)
+        # print(base_embeddings)
 
     output = set()
     for file in files:
@@ -74,15 +179,11 @@ async def create_upload_files(files: List[UploadFile]):
         img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
         
         faces = model.get(img)
-        # print(faces)
-        # img = draw_bounding_boxes(img, faces)
-        # img = Image.fromarray(img)
-        # print("hi")
-        # img.save("./image.png")
 
         final = []
+        sensitivity = 0.2
         for face in faces:
-            max_score=0.35
+            max_score=sensitivity
             max_roll=0
             for roll in base_embeddings:
                 for e1 in base_embeddings[roll]:
@@ -101,6 +202,107 @@ async def create_upload_files(files: List[UploadFile]):
         output = output.union(final)
     output = list(output)
     output.sort()
-    # print(output)
+
+
+    comparison = {}
+    for roll in list(students.keys()):
+        comparison[roll] = 1
+    for roll in output:
+        comparison[int(roll)] = 0
+
+    with open("./final-attendance.csv", 'w+') as f:
+        for roll in comparison:
+            f.write(str(roll)+","+str(comparison[roll])+"\n")
+
+
     return {"present": output}
+    # return FileResponse('./final-attendance.csv', filename='final-attendance.csv')
     
+@app.get("/Class")
+async def getClass(user: str):
+    try:
+        collection = database[user]
+        cursor = collection.find({"type":"class"})
+        
+        output = []
+        for document in cursor:
+            output.append({"id":str(document["_id"]), "batch": document["batch"], "code": document["code"], "color":document["color"]})
+        return output
+    except Exception as e:
+        print(e)
+
+@app.post("/Class")
+async def postClass(data: Item, user:str):
+    data = list(data)[0][1]
+    colors = ['red', 'orange', 'amber', 'yellow', 'lime', 'green', 'emerald', 'teal', 'cyan', 'sky', 'blue', 'indigo', 'violet', 'purple', 'fushsia', 'pink', 'rose']
+    random.seed(time.time())
+    color = random.choice(colors)
+    # print(color)
+    collection = database[user]
+    cursor = collection.insert_one({"type":"class", "code": data[0], "batch": data[1], "color": color})
+    print(cursor)
+    print({"result": str(cursor)})
+
+@app.get("/Config")
+async def getStudents(user:str, classId:str):
+    print(classId)
+    print(user)
+    collection = database[user]
+    count = collection.count_documents({"type":"students", "classId":classId})
+    if count>0:
+        cursor = collection.find({"type":"students", "classId":classId}, {'students':1, '_id':0})
+        output = []
+        for row in cursor[0]['students']:
+            output.append([str(row[1]), row[2]])
+        return output
+    else:
+        return []
+
+@app.post("/Config") # Embedding Database upload
+async def postStudents(files: List[UploadFile], user:str, classId:str): #for embeddings
+    print(user)
+    print(classId)
+    upload = {}
+    for file in files:
+        photo = await file.read()
+        nparr = np.fromstring(photo, np.uint8)
+        img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+        
+        faces = model.get(img)
+        upload[file.filename] = faces[0]['embedding']
+
+    # print(upload)
+    collection = database[user]
+    count = collection.count_documents({"type":"students", "classId":classId})
+    if count>0:
+        cursor = collection.find({"type":"students", "classId":classId}, {'students':1, '_id':0})
+        studentData = cursor[0]['students']
+        for student in studentData:
+            if(str(student[1]) in upload):
+                if(len(student)==3):
+                    student.append(upload[str(student[1])].tolist())
+                if(len(student)>3):
+                    student[3]=upload[str(student[1])].tolist()
+        result = collection.update_one({"type":"students", "classId":classId}, {"$set": {'students':studentData}})
+        # print(studentData)
+    return "Successfully uploaded."
+
+
+@app.post("/ConfigAddStudent")
+async def addStudent(data:Item, user:str, classId:str):
+    data = list(data)[0][1]
+    print(classId)
+    print(user)
+    print(data)
+    collection = database[user]
+    count = collection.count_documents({"type":"students", "classId":classId})
+    if count>0:
+        cursor = collection.find({"type":"students", "classId":classId}, {'students':1, '_id':0})
+        newStudents = cursor[0]['students']
+        newStudents.append([len(newStudents), data[1], data[0]])
+        result = collection.update_one({"type":"students", "classId":classId}, {"$set": {'students':newStudents}})
+    else:
+        newStudents = []
+        newStudents.append([len(newStudents), data[1], data[0]])
+        result = collection.update_one({"type":"students", "classId":classId}, {"$set": {'students':newStudents}})
+    return newStudents
