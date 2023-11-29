@@ -32,6 +32,9 @@ function CourseCard({ code, color, batch, id }) {
     if(type==="take"){
       navigate("/takeattendance", { state: { id: id, date:`${String(date[0])}/${String(date[1])}/${String(date[2])}` } })
     }
+    else if(type==="view"){
+      navigate("/view", { state: { id: id, date:`${String(date[0])}/${String(date[1])}/${String(date[2])}` } })
+    }
   };
   const ModalComponent = (
     <Modal isOpen={isOpen} onOpenChange={onOpenChange} placement="center">
@@ -39,7 +42,7 @@ function CourseCard({ code, color, batch, id }) {
         {(onClose) => (
           <>
             <ModalHeader className="flex flex-col gap-1">
-              Enter Date
+              Enter Date for {(typeModal==="view")?("viewing"):("taking attendance")}
             </ModalHeader>
             <form onSubmit={(event) => handleModalSubmit(typeModal, event)}>
               <ModalBody className="flex flex-row">

@@ -84,15 +84,13 @@ async def create_upload_files(files: List[UploadFile], user:str, classId:str, da
     output = set()
     try:
         collection = database[user]
-        count = collection.count_documents({"type":"students", "classId":classId})
+        count = collection.count_documents({"type":"embeddings", "classId":classId})
         # print(count)
         if count>0:
-            cursor = collection.find({"type":"students", "classId":classId})
+            cursor = collection.find({"type":"embeddings", "classId":classId}, {"_id":0, "embeddings":1})
             # print(cursor[0])
-            base_embeddings = {}
-            for row in cursor[0]['students']:
-                if len(row)>3:
-                    base_embeddings[str(row[1])]=np.array(row[3], dtype='float32')
+            base_embeddings = cursor[0]['embeddings']
+            # print(base_embeddings)
 
         for file in files:
             photo = await file.read()
@@ -105,7 +103,7 @@ async def create_upload_files(files: List[UploadFile], user:str, classId:str, da
                 max_score=sensitivity
                 max_roll=0
                 for roll in base_embeddings:
-                    e1 = base_embeddings[roll]
+                    e1 = np.array(base_embeddings[roll], dtype='float32')
                     score = compareEmbedding(e1,face['embedding'])
                     if max_score<score:
                         max_score = score
@@ -150,13 +148,14 @@ async def postClass(data: Item, user:str):
     # print(color)
     collection = database[user]
     cursor = collection.insert_one({"type":"class", "code": data[0], "batch": data[1], "color": color})
-    print(cursor)
-    print({"result": str(cursor)})
+    # print(cursor)
+    # print({"result": str(cursor)})
+    return "Successfully created class."
 
 @app.get("/Config")
 async def getStudents(user:str, classId:str):
-    print(classId)
-    print(user)
+    # print(classId)
+    # print(user)
     collection = database[user]
     count = collection.count_documents({"type":"students", "classId":classId})
     if count>0:
@@ -170,40 +169,35 @@ async def getStudents(user:str, classId:str):
 
 @app.post("/Config") # Embedding Database upload
 async def postStudents(files: List[UploadFile], user:str, classId:str): #for embeddings
-    print(user)
-    print(classId)
+    # print(user)
+    # print(classId)
     upload = {}
     for file in files:
         photo = await file.read()
         nparr = np.fromstring(photo, np.uint8)
         img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-        
         faces = model.get(img)
-        upload[file.filename] = faces[0]['embedding']
-
+        upload[file.filename] = faces[0]['embedding'].tolist()
     # print(upload)
     collection = database[user]
-    count = collection.count_documents({"type":"students", "classId":classId})
+    count = collection.count_documents({"type":"embeddings", "classId":classId})
     if count>0:
-        cursor = collection.find({"type":"students", "classId":classId}, {'students':1, '_id':0})
-        studentData = cursor[0]['students']
-        for student in studentData:
-            if(str(student[1]) in upload):
-                if(len(student)==3):
-                    student.append(upload[str(student[1])].tolist())
-                if(len(student)>3):
-                    student[3]=upload[str(student[1])].tolist()
-        result = collection.update_one({"type":"students", "classId":classId}, {"$set": {'students':studentData}})
-        # print(studentData)
+        cursor = collection.find({"type": "embeddings", "classId": classId}, {'embeddings':1, '_id':0})
+        embeddingData = cursor[0]['embeddings']
+        payload = dict(embeddingData, **upload)
+        result = collection.update_one({"type": "embeddings", "classId": classId}, {"$set": {'embeddings':payload}})
+        print(result)
+    elif count==0:
+        result = collection.insert_one({"type": "embeddings", "classId": classId, "embeddings":upload})
+        print(result)
     return "Successfully uploaded."
-
 
 @app.post("/ConfigAddStudent")
 async def addStudent(data:Item, user:str, classId:str):
     data = list(data)[0][1]
-    print(classId)
-    print(user)
-    print(data)
+    # print(classId)
+    # print(user)
+    # print(data)
     collection = database[user]
     count = collection.count_documents({"type":"students", "classId":classId})
     if count>0:
@@ -219,3 +213,25 @@ async def addStudent(data:Item, user:str, classId:str):
     for row in newStudents:
         output.append(row[1:])
     return output
+
+@app.get('/view') # for viewing attendance of a certain day
+def getAttendance( user:str, classId:str, date:str):
+    # print(classId)
+    # print(date)
+    collection = database[user]
+    count = collection.count_documents({"type":"students", "classId":classId})
+    if count>0:
+        cursor = collection.find({"type":"attendance", "classId":classId, "date":date}, {'present':1, '_id':0})
+        present = cursor[0]
+        # print(present)
+        cursor = collection. find({"type":"students", "classId":classId}, {'students':1, '_id':0})
+        output = []
+        # print(cursor[0]['students'])
+        for row in cursor[0]['students']:
+            if str(row[1]) in present['present']:
+                output.append([row[2], row[1], "Present"])
+            else:
+                output.append([row[2], row[1], "Absent"])
+        return {"present": output}
+    else:
+        return {"present": False}
