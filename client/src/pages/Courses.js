@@ -168,7 +168,7 @@ export default function Courses() {
   function handleAddCourse(){
     console.log(addCourseData);
     axios
-      .post("http://localhost:8000/Class", {data: addCourseData}, { params: { user: "user1" } });
+      .post("http://localhost:8000/Class", {data: addCourseData}, { params: { user: "user1" } }).then(console.log("Successfully, uploaded."));
   }
   return (
     <div className="w-screen flex justify-center">

@@ -98,7 +98,7 @@ async def create_upload_files(files: List[UploadFile], user:str, classId:str, da
             img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
             faces = model.get(img)
             final = []
-            sensitivity = 0.2
+            sensitivity = 0.35
             for face in faces:
                 max_score=sensitivity
                 max_roll=0
